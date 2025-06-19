@@ -40,7 +40,13 @@
   </style>
 </head>
 <body>
-
+<script>
+  const pass = prompt("Enter Admin Password:");
+  if (pass !== "sagar123") {
+    alert("❌ Access Denied!");
+    document.body.innerHTML = "";
+  }
+</script>
 <div class="sidebar">
   <h5 class="text-primary">User Manager</h5>
   <p class="text-muted">Sagar</p>
