@@ -1,10 +1,10 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import requests
 from datetime import datetime
 
 app = Flask(__name__)
 
-# JSONBin API Config
+# JSONBin Config
 JSONBIN_API_KEY = "$2a$10$vm/bHfwrLhw7wBCU4c/WeuiaKZy8mbLZt06WK3x6HpnEI9IPqyQFO"
 BIN_ID = "68567a118960c979a5ae5135"
 
@@ -31,38 +31,12 @@ def save_data(data):
         print("Save Error:", e)
         return False
 
-@app.route("/client_login", methods=["POST"])
-def client_login():
-    data = load_data()
-    category = request.form["category"]
-    username = request.form["username"]
-    password = request.form["password"]
-    client_hwid = request.form["hwid"]
+# ✅ Homepage: show index.html
+@app.route("/")
+def home():
+    return render_template("index.html")
 
-    if category not in data:
-        return jsonify({"status": "error", "message": "Invalid application"})
-
-    for user in data[category]:
-        if user["Username"] == username and user["Password"] == password:
-            if user["Status"] != "Active":
-                return jsonify({"status": "error", "message": "Account paused"})
-
-            # HWID bind logic
-            if user["HWID"] in [None, ""]:
-                user["HWID"] = client_hwid
-                if save_data(data):
-                    return jsonify({"status": "success", "message": "HWID bound successfully. Login success"})
-                else:
-                    return jsonify({"status": "error", "message": "Failed to bind HWID"})
-
-            if user["HWID"] != client_hwid:
-                return jsonify({"status": "error", "message": "HWID mismatch. Access denied"})
-
-            return jsonify({"status": "success", "message": "Login success"})
-
-    return jsonify({"status": "error", "message": "Invalid username or password"})
-
-# For testing user creation from here
+# ✅ Add user
 @app.route("/add_user", methods=["POST"])
 def add_user():
     data = load_data()
@@ -89,6 +63,100 @@ def add_user():
     if save_data(data):
         return jsonify({"status": "success", "message": "User added successfully"})
     return jsonify({"status": "error", "message": "Failed to add user"})
+
+# ✅ Client login with HWID lock
+@app.route("/client_login", methods=["POST"])
+def client_login():
+    data = load_data()
+    category = request.form["category"]
+    username = request.form["username"]
+    password = request.form["password"]
+    client_hwid = request.form["hwid"]
+
+    if category not in data:
+        return jsonify({"status": "error", "message": "Invalid application"})
+
+    for user in data[category]:
+        if user["Username"] == username and user["Password"] == password:
+            if user["Status"] != "Active":
+                return jsonify({"status": "error", "message": "Account paused"})
+
+            if user["HWID"] in [None, ""]:
+                user["HWID"] = client_hwid
+                if save_data(data):
+                    return jsonify({"status": "success", "message": "HWID bound. Login success"})
+                else:
+                    return jsonify({"status": "error", "message": "Failed to bind HWID"})
+
+            if user["HWID"] != client_hwid:
+                return jsonify({"status": "error", "message": "HWID mismatch. Access denied"})
+
+            return jsonify({"status": "success", "message": "Login success"})
+
+    return jsonify({"status": "error", "message": "Invalid username or password"})
+
+# ✅ Pause / Unpause user
+@app.route("/pause_user", methods=["POST"])
+def pause_user():
+    data = load_data()
+    category = request.form["category"]
+    username = request.form["username"]
+    action = request.form["action"]
+
+    if category not in data:
+        return jsonify({"status": "error", "message": "Invalid application"})
+
+    for user in data[category]:
+        if user["Username"] == username:
+            user["HWID"] = None if action == "pause" else ""
+            user["Status"] = "Paused" if action == "pause" else "Active"
+            if save_data(data):
+                return jsonify({"status": "success", "message": f"User {action}d"})
+            return jsonify({"status": "error", "message": "Failed to update user"})
+
+    return jsonify({"status": "error", "message": "User not found"})
+
+# ✅ Reset HWID
+@app.route("/reset_hwid", methods=["POST"])
+def reset_hwid():
+    data = load_data()
+    category = request.form["category"]
+    username = request.form["username"]
+
+    if category not in data:
+        return jsonify({"status": "error", "message": "Invalid application"})
+
+    for user in data[category]:
+        if user["Username"] == username:
+            user["HWID"] = ""
+            if save_data(data):
+                return jsonify({"status": "success", "message": f"HWID reset for {username}"})
+            return jsonify({"status": "error", "message": "Failed to reset HWID"})
+
+    return jsonify({"status": "error", "message": "User not found"})
+
+# ✅ Info user
+@app.route("/info_user", methods=["POST"])
+def info_user():
+    data = load_data()
+    category = request.form["category"]
+    username = request.form["username"]
+
+    if category not in data:
+        return jsonify({"status": "error", "message": "Invalid application"})
+
+    for user in data[category]:
+        if user["Username"] == username:
+            return jsonify({"status": "success", "data": user})
+
+    return jsonify({"status": "error", "message": "User not found"})
+
+# ✅ Get all users
+@app.route("/get_users", methods=["POST"])
+def get_users():
+    data = load_data()
+    category = request.form["category"]
+    return jsonify(data.get(category, []))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
