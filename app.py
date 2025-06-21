@@ -1,8 +1,14 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for
 import requests
 from datetime import datetime
+import os
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
+
+# Admin credentials
+ADMIN_USERNAME = "RTX"
+ADMIN_PASSWORD = "3050"
 
 # JSONBin Config
 JSONBIN_API_KEY = "$2a$10$vm/bHfwrLhw7wBCU4c/WeuiaKZy8mbLZt06WK3x6HpnEI9IPqyQFO"
@@ -12,6 +18,33 @@ HEADERS = {
     "Content-Type": "application/json",
     "X-Master-Key": JSONBIN_API_KEY
 }
+
+# ---------------------------- Auth Routes ----------------------------
+
+@app.route("/")
+def home():
+    if session.get("logged_in"):
+        return render_template("index.html")
+    return redirect(url_for("login"))
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session["logged_in"] = True
+            return redirect(url_for("home"))
+        else:
+            return render_template("login.html", error="Invalid credentials")
+    return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    session.pop("logged_in", None)
+    return redirect(url_for("login"))
+
+# ---------------------------- JSONBin Logic ----------------------------
 
 def load_data():
     try:
@@ -31,12 +64,6 @@ def save_data(data):
         print("Save Error:", e)
         return False
 
-# ✅ Homepage: show index.html
-@app.route("/")
-def home():
-    return render_template("index.html")
-
-# ✅ Add user
 @app.route("/add_user", methods=["POST"])
 def add_user():
     data = load_data()
@@ -64,7 +91,6 @@ def add_user():
         return jsonify({"status": "success", "message": "User added successfully"})
     return jsonify({"status": "error", "message": "Failed to add user"})
 
-# ✅ Client login with HWID lock
 @app.route("/client_login", methods=["POST"])
 def client_login():
     data = load_data()
@@ -95,7 +121,6 @@ def client_login():
 
     return jsonify({"status": "error", "message": "Invalid username or password"})
 
-# ✅ Pause / Unpause user
 @app.route("/pause_user", methods=["POST"])
 def pause_user():
     data = load_data()
@@ -116,7 +141,6 @@ def pause_user():
 
     return jsonify({"status": "error", "message": "User not found"})
 
-# 👍 Delete 
 @app.route("/delete_user", methods=["POST"])
 def delete_user():
     data = load_data()
@@ -135,7 +159,7 @@ def delete_user():
     if save_data(data):
         return jsonify({"status": "success", "message": "User deleted"})
     return jsonify({"status": "error", "message": "Failed to update data"})
-# ✅ Reset HWID
+
 @app.route("/reset_hwid", methods=["POST"])
 def reset_hwid():
     data = load_data()
@@ -154,7 +178,6 @@ def reset_hwid():
 
     return jsonify({"status": "error", "message": "User not found"})
 
-# ✅ Info user
 @app.route("/info_user", methods=["POST"])
 def info_user():
     data = load_data()
@@ -170,7 +193,6 @@ def info_user():
 
     return jsonify({"status": "error", "message": "User not found"})
 
-# ✅ Get all users
 @app.route("/get_users", methods=["POST"])
 def get_users():
     data = load_data()
