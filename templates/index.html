@@ -106,7 +106,16 @@
   <div id="show" class="section">
     <h4>📋 All Users</h4>
     <table class="table table-bordered user-table">
-      <thead class="table-light"><tr><th>Username</th><th>Password</th><th>HWID</th><th>Expiry</th><th>Created</th></tr></thead>
+      <thead class="table-light">
+        <tr>
+          <th>Username</th>
+          <th>Password</th>
+          <th>HWID</th>
+          <th>Expiry</th>
+          <th>Created</th>
+          <th>Status</th>
+        </tr>
+      </thead>
       <tbody id="userList"></tbody>
     </table>
   </div>
@@ -206,6 +215,7 @@ function infoUser(e) {
           <p><b>HWID:</b> ${u.HWID || 'None'}</p>
           <p><b>Expiry:</b> ${u.Expiry}</p>
           <p><b>Created:</b> ${u.CreatedAt}</p>
+          <p><b>Status:</b> ${u.Status || 'Unknown'}</p>
         </div></div>
       `;
     } else {
@@ -228,6 +238,7 @@ function refreshUsers() {
         <td>${u.HWID || 'None'}</td>
         <td>${u.Expiry}</td>
         <td>${u.CreatedAt}</td>
+        <td>${u.Status || 'Unknown'}</td>
       </tr>`;
     });
   });
