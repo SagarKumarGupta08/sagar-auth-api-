@@ -1,55 +1,55 @@
 from flask import Flask, request, jsonify, render_template
-import requests
 import json
-import os
 from datetime import datetime
+import os
+import requests
+import base64
 
 app = Flask(__name__)
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-REPO_OWNER = os.getenv("REPO_OWNER")
-REPO_NAME = os.getenv("REPO_NAME")
-FILE_PATH = os.getenv("FILE_PATH")
 
-def github_headers():
-    return {
-        "Authorization": f"token {GITHUB_TOKEN}",
-        "Accept": "application/vnd.github+json"
-    }
-
-def get_file_sha():
-    url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{FILE_PATH}"
-    r = requests.get(url, headers=github_headers())
-    if r.status_code == 200:
-        return r.json().get("sha")
-    return None
+# GitHub Config (auto read from Render environment)
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
+REPO_OWNER = os.environ.get("REPO_OWNER")
+REPO_NAME = os.environ.get("REPO_NAME")
+FILE_PATH = os.environ.get("FILE_PATH")
 
 def load_data():
-    url = f"https://raw.githubusercontent.com/{REPO_OWNER}/{REPO_NAME}/main/{FILE_PATH}"
-    r = requests.get(url)
-    if r.status_code == 200:
-        return r.json()
+    url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{FILE_PATH}"
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        content = response.json()["content"]
+        decoded = base64.b64decode(content).decode()
+        return json.loads(decoded)
     return {}
 
 def save_data(data):
-    url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{FILE_PATH}"
     content = json.dumps(data, indent=2)
-    encoded_content = content.encode("utf-8").decode("utf-8")
-    b64_content = encoded_content.encode("utf-8").decode("utf-8")
-    message = "Update users.json"
-    sha = get_file_sha()
+    encoded_content = base64.b64encode(content.encode()).decode()
+
+    url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{FILE_PATH}"
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+
+    response = requests.get(url, headers=headers)
+    sha = response.json()["sha"] if response.status_code == 200 else None
 
     payload = {
-        "message": message,
-        "content": content.encode("utf-8").decode("utf-8").encode("base64").decode(),
-        "branch": "main",
+        "message": "Update users.json",
+        "content": encoded_content,
         "sha": sha
     }
 
-    headers = github_headers()
-    requests.put(url, headers=headers, json=payload)
+    r = requests.put(url, headers=headers, json=payload)
+    return r.json()
 
-@app.route("/")
-def index():
+@app.route("/", methods=["GET"])
+def home():
     return render_template("index.html")
 
 @app.route("/add_user", methods=["POST"])
@@ -134,23 +134,6 @@ def get_users():
     data = load_data()
     category = request.form["category"]
     return jsonify(data.get(category, []))
-
-@app.route("/reset_hwid", methods=["POST"])
-def reset_hwid():
-    data = load_data()
-    category = request.form["category"]
-    username = request.form["username"]
-
-    if category not in data:
-        return jsonify({"status": "error", "message": "Invalid application"})
-
-    for u in data[category]:
-        if u["Username"] == username:
-            u["HWID"] = ""
-            save_data(data)
-            return jsonify({"status": "success", "message": "HWID reset"})
-
-    return jsonify({"status": "error", "message": "User not found"})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
