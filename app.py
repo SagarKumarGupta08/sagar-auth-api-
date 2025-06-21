@@ -115,11 +115,13 @@ def reset_hwid():
 
     for u in data[category]:
         if u["Username"] == username:
-            u["HWID"] = ""  # HWID is reset (you can also use None if preferred)
+            u["HWID"] = ""
             save_data(data)
             return jsonify({"status": "success", "message": f"HWID reset for {username}"})
 
     return jsonify({"status": "error", "message": "User not found"})
 
+# 🔥 This part is updated for Render deployment:
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Render will provide PORT
+    app.run(host="0.0.0.0", port=port, debug=True)
