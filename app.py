@@ -1,13 +1,15 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, session, url_for
 import requests
 from datetime import datetime
-import os
 
 app = Flask(__name__)
+app.secret_key = "supersecretkey123"  # Replace in real app or move to env
 
-# 🔐 Load secrets from environment (set these in Render settings)
-JSONBIN_API_KEY = os.environ.get("$2a$10$vm/bHfwrLhw7wBCU4c/WeuiaKZy8mbLZt06WK3x6HpnEI9IPqyQFO")
-BIN_ID = os.environ.get("68567a118960c979a5ae5135")
+# ✅ Hardcoded credentials (for testing only)
+JSONBIN_API_KEY = "$2a$10$vm/bHfwrLhw7wBCU4c/WeuiaKZy8mbLZt06WK3x6HpnEI9IPqyQFO"
+BIN_ID = "68567a118960c979a5ae5135"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "1234"
 
 HEADERS = {
     "Content-Type": "application/json",
@@ -22,23 +24,51 @@ def load_data():
             return res.json().get("record", {})
         return {}
     except Exception as e:
-        print("Error loading data:", e)
+        print("Error loading:", e)
         return {}
 
 def save_data(data):
     try:
         url = f"https://api.jsonbin.io/v3/b/{BIN_ID}"
         res = requests.put(url, headers=HEADERS, json=data)
+        print("Save status:", res.status_code, res.text)
         return res.status_code == 200
     except Exception as e:
-        print("Error saving data:", e)
+        print("Save error:", e)
         return False
 
+def login_required(func):
+    def wrapper(*args, **kwargs):
+        if not session.get("logged_in"):
+            return redirect(url_for("login"))
+        return func(*args, **kwargs)
+    wrapper.__name__ = func.__name__
+    return wrapper
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session["logged_in"] = True
+            return redirect(url_for("home"))
+        else:
+            return render_template("login.html", error="Invalid credentials")
+    return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
 @app.route("/", methods=["GET"])
+@login_required
 def home():
     return render_template("index.html")
 
 @app.route("/add_user", methods=["POST"])
+@login_required
 def add_user():
     data = load_data()
     category = request.form["category"]
@@ -65,6 +95,7 @@ def add_user():
     return jsonify({"status": "error", "message": "Failed to save user"})
 
 @app.route("/delete_user", methods=["POST"])
+@login_required
 def delete_user():
     data = load_data()
     category = request.form["category"]
@@ -85,6 +116,7 @@ def delete_user():
     return jsonify({"status": "error", "message": "Failed to update data"})
 
 @app.route("/pause_user", methods=["POST"])
+@login_required
 def pause_user():
     data = load_data()
     category = request.form["category"]
@@ -104,6 +136,7 @@ def pause_user():
     return jsonify({"status": "error", "message": "User not found"})
 
 @app.route("/info_user", methods=["POST"])
+@login_required
 def info_user():
     data = load_data()
     category = request.form["category"]
@@ -119,12 +152,14 @@ def info_user():
     return jsonify({"status": "error", "message": "User not found"})
 
 @app.route("/get_users", methods=["POST"])
+@login_required
 def get_users():
     data = load_data()
     category = request.form["category"]
     return jsonify(data.get(category, []))
 
 @app.route("/reset_hwid", methods=["POST"])
+@login_required
 def reset_hwid():
     data = load_data()
     category = request.form["category"]
@@ -142,7 +177,5 @@ def reset_hwid():
 
     return jsonify({"status": "error", "message": "User not found"})
 
-# ✅ Render compatible host & port binding
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
