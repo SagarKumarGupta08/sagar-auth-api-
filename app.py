@@ -4,7 +4,7 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# 🔐 JSONBin config
+# JSONBin API config
 JSONBIN_API_KEY = "$2a$10$vm/bHfwrLhw7wBCU4c/WeuiaKZy8mbLZt06WK3x6HpnEI9IPqyQFO"
 BIN_ID = "68567a118960c979a5ae5135"
 
@@ -15,24 +15,26 @@ HEADERS = {
 
 def load_data():
     try:
-        res = requests.get(f"https://api.jsonbin.io/v3/b/{BIN_ID}/latest", headers=HEADERS)
+        url = f"https://api.jsonbin.io/v3/b/{BIN_ID}/latest"
+        res = requests.get(url, headers=HEADERS)
         if res.status_code == 200:
             return res.json().get("record", {})
         return {}
     except Exception as e:
-        print("Error loading data:", e)
+        print("Load error:", e)
         return {}
 
 def save_data(data):
     try:
-        res = requests.put(f"https://api.jsonbin.io/v3/b/{BIN_ID}", headers=HEADERS, json=data)
-        print("Save:", res.status_code, res.text)
+        url = f"https://api.jsonbin.io/v3/b/{BIN_ID}"
+        res = requests.put(url, headers=HEADERS, json=data)
+        print("Save status:", res.status_code)
         return res.status_code == 200
     except Exception as e:
-        print("Error saving data:", e)
+        print("Save error:", e)
         return False
 
-@app.route("/", methods=["GET"])
+@app.route("/")
 def home():
     return render_template("index.html")
 
@@ -71,13 +73,7 @@ def delete_user():
     if category not in data:
         return jsonify({"status": "error", "message": "Invalid application"})
 
-    users = data[category]
-    updated_users = [u for u in users if u["Username"] != username]
-
-    if len(users) == len(updated_users):
-        return jsonify({"status": "error", "message": "User not found"})
-
-    data[category] = updated_users
+    data[category] = [u for u in data[category] if u["Username"] != username]
     if save_data(data):
         return jsonify({"status": "success", "message": "User deleted"})
     return jsonify({"status": "error", "message": "Failed to update data"})
@@ -92,9 +88,9 @@ def pause_user():
     if category not in data:
         return jsonify({"status": "error", "message": "Invalid application"})
 
-    for u in data[category]:
-        if u["Username"] == username:
-            u["HWID"] = None if action == "pause" else ""
+    for user in data[category]:
+        if user["Username"] == username:
+            user["HWID"] = None if action == "pause" else ""
             if save_data(data):
                 return jsonify({"status": "success", "message": f"User {action}d"})
             return jsonify({"status": "error", "message": "Failed to update user"})
@@ -110,9 +106,9 @@ def info_user():
     if category not in data:
         return jsonify({"status": "error", "message": "Invalid application"})
 
-    for u in data[category]:
-        if u["Username"] == username:
-            return jsonify({"status": "success", "data": u})
+    for user in data[category]:
+        if user["Username"] == username:
+            return jsonify({"status": "success", "data": user})
 
     return jsonify({"status": "error", "message": "User not found"})
 
@@ -131,9 +127,9 @@ def reset_hwid():
     if category not in data:
         return jsonify({"status": "error", "message": "Invalid application"})
 
-    for u in data[category]:
-        if u["Username"] == username:
-            u["HWID"] = ""
+    for user in data[category]:
+        if user["Username"] == username:
+            user["HWID"] = ""
             if save_data(data):
                 return jsonify({"status": "success", "message": f"HWID reset for {username}"})
             return jsonify({"status": "error", "message": "Failed to update data"})
