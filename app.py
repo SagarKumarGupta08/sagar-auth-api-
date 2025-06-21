@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 # 🔐 Load secrets from environment (set these in Render settings)
 JSONBIN_API_KEY = os.environ.get("$2a$10$vm/bHfwrLhw7wBCU4c/WeuiaKZy8mbLZt06WK3x6HpnEI9IPqyQFO")
-BIN_ID = os.environ.get("685666b58561e97a5028a85f")
+BIN_ID = os.environ.get("68567a118960c979a5ae5135")
 
 HEADERS = {
     "Content-Type": "application/json",
