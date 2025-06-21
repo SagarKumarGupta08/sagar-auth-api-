@@ -116,6 +116,25 @@ def pause_user():
 
     return jsonify({"status": "error", "message": "User not found"})
 
+# 👍 Delete 
+@app.route("/delete_user", methods=["POST"])
+def delete_user():
+    data = load_data()
+    category = request.form["category"]
+    username = request.form["username"]
+
+    if category not in data:
+        return jsonify({"status": "error", "message": "Invalid application"})
+
+    original_len = len(data[category])
+    data[category] = [u for u in data[category] if u["Username"] != username]
+
+    if len(data[category]) == original_len:
+        return jsonify({"status": "error", "message": "User not found"})
+
+    if save_data(data):
+        return jsonify({"status": "success", "message": "User deleted"})
+    return jsonify({"status": "error", "message": "Failed to update data"})
 # ✅ Reset HWID
 @app.route("/reset_hwid", methods=["POST"])
 def reset_hwid():
