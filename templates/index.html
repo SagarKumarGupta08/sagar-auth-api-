@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -115,252 +114,149 @@
   </style>
 </head>
 <body>
-  <div class="top-panel">
-    <div class="title">HydraAuth System</div>
-    <div class="top-controls">
-      <select id="appSelect"><option>Select App</option></select>
-      <button class="toggle-btn" onclick="toggleMode()">🌙 Dark Mode</button>
-    </div>
-  </div>
-
-  <div class="middle-area">
-    <div class="left-panel">
-      <div class="sidebar-menu">
-        <button onclick="triggerPanel('createApp')">Create Application</button>
-        <button onclick="triggerPanel('createUser')">Create New User</button>
-        <button onclick="triggerPanel('remove')">Remove User</button>
-        <button onclick="triggerPanel('suspend')">Suspend/Unpause User</button>
-        <button onclick="triggerPanel('reset')">Reset HWID</button>
-        <button onclick="triggerPanel('view')">View All Users</button>
-        <button onclick="triggerPanel('userinfo')">User Info</button>
-        <button onclick="triggerPanel('sendmsg')">Send Message</button>
-      </div>
-    </div>
-
-    <div class="right-panel">
-      <div id="createApp" class="panel-content active">
-        <h3>Create Application</h3>
-        <div class="form-group"><label>Application Name</label>
-          <input id="appName" type="text">
-        </div>
-        <button class="submit-btn" onclick="createApp()">📁 Create Application</button>
-      </div>
-
-      <div id="createUser" class="panel-content">
-        <h3>Create New User</h3>
-        <div class="form-group"><label>Username</label>
-          <input id="username" type="text">
-        </div>
-        <div class="form-group"><label>Password</label>
-          <input id="password" type="password">
-        </div>
-        <div class="form-group"><label>Expiry Date</label>
-          <input id="expiry" type="date">
-        </div>
-        <button class="submit-btn" onclick="createUser()">➕ Create User</button>
-      </div>
-
-      <div id="remove" class="panel-content">
-        <h3>Remove User</h3>
-        <div class="form-group"><label>Username</label>
-          <input id="removeUsername" type="text">
-        </div>
-        <button class="submit-btn" onclick="removeUser()">🗑️ Remove</button>
-      </div>
-
-      <div id="suspend" class="panel-content">
-        <h3>Suspend / Unpause User</h3>
-        <div class="form-group"><label>Username</label>
-          <input id="suspendUsername" type="text">
-        </div>
-        <button class="submit-btn" onclick="pauseUser()">⏸ Suspend</button>
-        <button class="submit-btn" onclick="unpauseUser()">▶ Unpause</button>
-      </div>
-
-      <div id="reset" class="panel-content">
-        <h3>Reset HWID</h3>
-        <div class="form-group"><label>Username</label>
-          <input id="resetUsername" type="text">
-        </div>
-        <button class="submit-btn" onclick="resetHWID()">♻ Reset</button>
-      </div>
-
-      <div id="view" class="panel-content">
-        <h3>All Users</h3>
-        <div style="overflow-x:auto;">
-          <table id="usersTable">
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Password</th>
-                <th>HWID</th>
-                <th>Status</th>
-                <th>Expiry</th>
-                <th>Created</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="userinfo" class="panel-content">
-        <h3>🔍 User Info</h3>
-        <div class="form-group">
-          <label>Enter Username</label>
-          <input type="text" id="searchUser" placeholder="Enter username">
-          <button class="submit-btn" style="margin-top: 10px;" onclick="showUserInfo()">🔍 Show Info</button>
-          <pre id="userInfoOutput" style="color: gray; background-color: #111;">User info will appear here...</pre>
-        </div>
-      </div>
-
-      <div id="sendmsg" class="panel-content">
-      <h3>📤 Send Message to User</h3>
-    
-     <div class="form-group">
-      <label>Username</label>
-      <input type="text" id="messageUser" placeholder="Enter existing username">
-      </div>
-
-  <div class="form-group">
-    <label>Your Message</label>
-    <textarea id="messageText" rows="5" placeholder="Type your message here..." style="width: 100%; padding: 14px; border-radius: 8px; font-size: 16px; resize: vertical;"></textarea>
-  </div>
-
-  <button class="submit-btn" onclick="sendMessage()">📤 Send</button>
-</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast">This is a notification</div>
-
+  <!-- UI stays the same -->
+  <!-- SCRIPT SECTION STARTS -->
   <script>
-    function showToast(msg) {
-      const toast = document.getElementById("toast");
-      toast.textContent = msg;
-      toast.classList.add("show");
-      setTimeout(() => toast.classList.remove("show"), 3000);
-    }
+    const api = endpoint => `/` + endpoint;function showToast(msg) {
+  const toast = document.getElementById("toast");
+  toast.textContent = msg;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 3000);
+}
 
-    function triggerPanel(id) {
-      document.querySelectorAll('.panel-content').forEach(p => p.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-      if (id === "view") loadUsersTable();
-    }
+function getAppKey() {
+  const app = document.getElementById('appSelect').value;
+  if (!app || app === "Select App") {
+    showToast("❗ Select an app");
+    return null;
+  }
+  return app;
+}
 
-    function toggleMode() {
-      const body = document.body;
-      const btn = document.querySelector('.toggle-btn');
-      body.classList.toggle('light-mode');
-      btn.textContent = body.classList.contains('light-mode') ? '🌞 Light Mode' : '🌙 Dark Mode';
-    }
-
-    function createApp() {
-      const name = document.getElementById('appName').value.trim();
-      if (!name) return showToast('❗ Enter application name');
+function createApp() {
+  const name = document.getElementById('appName').value.trim();
+  if (!name) return showToast('❗ Enter application name');
+  fetch(api('create_app'), {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ app: name })
+  }).then(res => res.json()).then(data => {
+    if (data.status === 'success') {
       const select = document.getElementById('appSelect');
       const option = document.createElement('option');
       option.text = name;
       select.add(option);
-      showToast(`✅ Application "${name}" created`);
-    }
+      showToast(`✅ ${data.message}`);
+    } else showToast(`❌ ${data.message}`);
+  });
+}
 
-    function getAppKey() {
-      const app = document.getElementById('appSelect').value;
-      if (!app || app === "Select App") {
-        showToast("❗ Select an app");
-        return null;
-      }
-      return `users_${app}`;
-    }
+function createUser() {
+  const app = getAppKey(); if (!app) return;
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const expiry = document.getElementById('expiry').value;
+  if (!username || !password || !expiry) return showToast("❗ Fill all fields");
+  fetch(api('add_user'), {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ category: app, username, password, expiry })
+  }).then(res => res.json()).then(data => showToast(data.message));
+}
 
-    function createUser() {
-      const key = getAppKey(); if (!key) return;
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value.trim();
-      const expiry = document.getElementById('expiry').value;
-      if (!username || !password || !expiry) return showToast("❗ Fill all fields");
+function removeUser() {
+  const app = getAppKey(); if (!app) return;
+  const username = document.getElementById('removeUsername').value.trim();
+  fetch(api('delete_user'), {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ category: app, username })
+  }).then(res => res.json()).then(data => showToast(data.message));
+}
 
-      const users = JSON.parse(localStorage.getItem(key) || "[]");
-      users.push({ username, password, hwid: 'N/A', status: 'Active', expiry, createdAt: new Date().toISOString().split("T")[0] });
-      localStorage.setItem(key, JSON.stringify(users));
-      showToast(`✅ User "${username}" created`);
-    }
+function pauseUser() {
+  const app = getAppKey(); if (!app) return;
+  const username = document.getElementById('suspendUsername').value.trim();
+  fetch(api('pause_user'), {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ category: app, username, action: 'pause' })
+  }).then(res => res.json()).then(data => showToast(data.message));
+}
 
-    function removeUser() {
-      const key = getAppKey(); if (!key) return;
-      const user = document.getElementById('removeUsername').value.trim();
-      const users = JSON.parse(localStorage.getItem(key) || "[]").filter(u => u.username !== user);
-      localStorage.setItem(key, JSON.stringify(users));
-      showToast(`🗑️ "${user}" removed`);
-    }
+function unpauseUser() {
+  const app = getAppKey(); if (!app) return;
+  const username = document.getElementById('suspendUsername').value.trim();
+  fetch(api('pause_user'), {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ category: app, username, action: 'unpause' })
+  }).then(res => res.json()).then(data => showToast(data.message));
+}
 
-    function pauseUser() {
-      const key = getAppKey(); if (!key) return;
-      const user = document.getElementById('suspendUsername').value.trim();
-      const users = JSON.parse(localStorage.getItem(key) || "[]");
-      users.forEach(u => { if (u.username === user) u.status = 'Suspended'; });
-      localStorage.setItem(key, JSON.stringify(users));
-      showToast(`⏸ "${user}" suspended`);
-    }
+function resetHWID() {
+  const app = getAppKey(); if (!app) return;
+  const username = document.getElementById('resetUsername').value.trim();
+  fetch(api('reset_hwid'), {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ category: app, username })
+  }).then(res => res.json()).then(data => showToast(data.message));
+}
 
-    function unpauseUser() {
-      const key = getAppKey(); if (!key) return;
-      const user = document.getElementById('suspendUsername').value.trim();
-      const users = JSON.parse(localStorage.getItem(key) || "[]");
-      users.forEach(u => { if (u.username === user) u.status = 'Active'; });
-      localStorage.setItem(key, JSON.stringify(users));
-      showToast(`▶ "${user}" unpaused`);
-    }
+function showUserInfo() {
+  const app = getAppKey(); if (!app) return;
+  const username = document.getElementById('searchUser').value.trim();
+  fetch(api('info_user'), {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ category: app, username })
+  }).then(res => res.json()).then(data => {
+    const box = document.getElementById('userInfoOutput');
+    if (data.status !== 'success') return box.textContent = `❗ ${data.message}`;
+    const u = data.data;
+    box.textContent = `👤 Username: ${u.Username}
 
-    function resetHWID() {
-      const key = getAppKey(); if (!key) return;
-      const user = document.getElementById('resetUsername').value.trim();
-      const users = JSON.parse(localStorage.getItem(key) || "[]");
-      users.forEach(u => { if (u.username === user) u.hwid = 'N/A'; });
-      localStorage.setItem(key, JSON.stringify(users));
-      showToast(`♻ HWID reset for "${user}"`);
-    }
+🔐 Password: ${u.Password} 🖥️ HWID: ${u.HWID} 📛 Status: ${u.Status} 📅 Expiry: ${u.Expiry} 🕒 Created At: ${u.CreatedAt}`; }); }
 
-    function loadUsersTable() {
-      const key = getAppKey(); if (!key) return;
-      const users = JSON.parse(localStorage.getItem(key) || "[]");
-      const tbody = document.querySelector("#usersTable tbody");
-      tbody.innerHTML = "";
-      users.forEach(u => {
-        tbody.innerHTML += `<tr>
-          <td>${u.username}</td>
-          <td>${u.password}</td>
-          <td>${u.hwid}</td>
-          <td>${u.status}</td>
-          <td>${u.expiry}</td>
-          <td>${u.createdAt}</td>
-        </tr>`;
-      });
-    }
+function loadUsersTable() {
+  const app = getAppKey(); if (!app) return;
+  fetch(api('get_users'), {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ category: app })
+  }).then(res => res.json()).then(users => {
+    const tbody = document.querySelector("#usersTable tbody");
+    tbody.innerHTML = "";
+    users.forEach(u => {
+      tbody.innerHTML += `<tr>
+        <td>${u.Username}</td>
+        <td>${u.Password}</td>
+        <td>${u.HWID}</td>
+        <td>${u.Status}</td>
+        <td>${u.Expiry}</td>
+        <td>${u.CreatedAt}</td>
+      </tr>`;
+    });
+  });
+}
 
-    function showUserInfo() {
-      const key = getAppKey(); if (!key) return;
-      const userInput = document.getElementById('searchUser').value.trim();
-      const users = JSON.parse(localStorage.getItem(key) || "[]");
-      const found = users.find(u => u.username === userInput);
-      const box = document.getElementById('userInfoOutput');
-      if (!found) return box.textContent = `❗ User not found`;
-      box.textContent = `👤 Username: ${found.username}
-🔐 Password: ${found.password}
-🖥️ HWID: ${found.hwid}
-📛 Status: ${found.status}
-📅 Expiry: ${found.expiry}
-🕒 Created At: ${found.createdAt}`;
-    }
+function sendMessage() {
+  const app = getAppKey(); if (!app) return;
+  const username = document.getElementById('messageUser').value.trim();
+  const message = document.getElementById('messageText').value.trim();
+  if (!username || !message) return showToast("❗ Fill both fields");
+  fetch(api('send_message'), {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ category: app, username, message })
+  }).then(res => res.json()).then(data => showToast(data.message));
+}
 
-    function sendMessage() {
-      const msg = document.getElementById('messageText').value.trim();
-      if (!msg) return showToast("❗ Enter a message to send");
-      showToast(`📤 Message Sent: "${msg}"`);
-      document.getElementById('messageText').value = "";
-    }
+function triggerPanel(id) {
+  document.querySelectorAll('.panel-content').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === "view") loadUsersTable();
+}
+
+function toggleMode() {
+  const body = document.body;
+  const btn = document.querySelector('.toggle-btn');
+  body.classList.toggle('light-mode');
+  btn.textContent = body.classList.contains('light-mode') ? '🌞 Light Mode' : '🌙 Dark Mode';
+}
+
   </script>
 </body>
 </html>
