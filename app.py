@@ -1,21 +1,38 @@
 from flask import Flask, request, jsonify, render_template
-import json
+import requests
 from datetime import datetime
 import os
 
 app = Flask(__name__)
 
-DATA_FILE = "users.json"
+# 🔐 Load secrets from environment (set these in Render settings)
+JSONBIN_API_KEY = os.environ.get("$2a$10$vm/bHfwrLhw7wBCU4c/WeuiaKZy8mbLZt06WK3x6HpnEI9IPqyQFO")
+BIN_ID = os.environ.get("685666b58561e97a5028a85f")
+
+HEADERS = {
+    "Content-Type": "application/json",
+    "X-Master-Key": JSONBIN_API_KEY
+}
 
 def load_data():
-    if not os.path.exists(DATA_FILE):
+    try:
+        url = f"https://api.jsonbin.io/v3/b/{BIN_ID}/latest"
+        res = requests.get(url, headers=HEADERS)
+        if res.status_code == 200:
+            return res.json().get("record", {})
         return {}
-    with open(DATA_FILE, "r") as f:
-        return json.load(f)
+    except Exception as e:
+        print("Error loading data:", e)
+        return {}
 
 def save_data(data):
-    with open(DATA_FILE, "w") as f:
-        json.dump(data, f, indent=2)
+    try:
+        url = f"https://api.jsonbin.io/v3/b/{BIN_ID}"
+        res = requests.put(url, headers=HEADERS, json=data)
+        return res.status_code == 200
+    except Exception as e:
+        print("Error saving data:", e)
+        return False
 
 @app.route("/", methods=["GET"])
 def home():
@@ -43,8 +60,9 @@ def add_user():
         "CreatedAt": datetime.today().strftime("%Y-%m-%d")
     })
 
-    save_data(data)
-    return jsonify({"status": "success", "message": "User added"})
+    if save_data(data):
+        return jsonify({"status": "success", "message": "User added"})
+    return jsonify({"status": "error", "message": "Failed to save user"})
 
 @app.route("/delete_user", methods=["POST"])
 def delete_user():
@@ -62,8 +80,9 @@ def delete_user():
         return jsonify({"status": "error", "message": "User not found"})
 
     data[category] = updated_users
-    save_data(data)
-    return jsonify({"status": "success", "message": "User deleted"})
+    if save_data(data):
+        return jsonify({"status": "success", "message": "User deleted"})
+    return jsonify({"status": "error", "message": "Failed to update data"})
 
 @app.route("/pause_user", methods=["POST"])
 def pause_user():
@@ -78,8 +97,9 @@ def pause_user():
     for u in data[category]:
         if u["Username"] == username:
             u["HWID"] = None if action == "pause" else ""
-            save_data(data)
-            return jsonify({"status": "success", "message": f"User {action}d"})
+            if save_data(data):
+                return jsonify({"status": "success", "message": f"User {action}d"})
+            return jsonify({"status": "error", "message": "Failed to update user"})
 
     return jsonify({"status": "error", "message": "User not found"})
 
@@ -116,12 +136,13 @@ def reset_hwid():
     for u in data[category]:
         if u["Username"] == username:
             u["HWID"] = ""
-            save_data(data)
-            return jsonify({"status": "success", "message": f"HWID reset for {username}"})
+            if save_data(data):
+                return jsonify({"status": "success", "message": f"HWID reset for {username}"})
+            return jsonify({"status": "error", "message": "Failed to update data"})
 
     return jsonify({"status": "error", "message": "User not found"})
 
-# 🔥 This part is updated for Render deployment:
+# ✅ Render compatible host & port binding
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Render will provide PORT
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
