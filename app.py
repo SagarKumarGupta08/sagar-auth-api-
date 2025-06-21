@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, session, redirect, url_for
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 import requests
 from datetime import datetime
 import os
@@ -6,124 +6,118 @@ import os
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
-# Admin credentials
+# --- Configuration ---
 ADMIN_USERNAME = "RTX"
 ADMIN_PASSWORD = "3050"
 
-# JSONBin Config
 JSONBIN_API_KEY = "$2a$10$vm/bHfwrLhw7wBCU4c/WeuiaKZy8mbLZt06WK3x6HpnEI9IPqyQFO"
-BIN_ID = "6856f4d78a456b7966b2c840"
+BIN_ID = "6856f8e58a456b7966b2ca8d"
 
 HEADERS = {
     "Content-Type": "application/json",
     "X-Master-Key": JSONBIN_API_KEY
 }
 
-# ------------------ HTML Dashboard Routes ------------------
+# --- JSONBin Helpers ---
+def load_data():
+    try:
+        r = requests.get(f"https://api.jsonbin.io/v3/b/{BIN_ID}/latest", headers=HEADERS)
+        return r.json()['record'] if r.status_code == 200 else {}
+    except Exception as e:
+        print("Error loading:", e)
+        return {}
 
+def save_data(data):
+    try:
+        r = requests.put(f"https://api.jsonbin.io/v3/b/{BIN_ID}", headers=HEADERS, json=data)
+        return r.status_code == 200
+    except Exception as e:
+        print("Error saving:", e)
+        return False
+
+# --- Routes ---
 @app.route("/")
 def home():
-    if session.get("logged_in"):
-        return render_template("index.html")
-    return redirect(url_for("login"))
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
+    return render_template("index.html")
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        if request.form["username"] == ADMIN_USERNAME and request.form["password"] == ADMIN_PASSWORD:
             session["logged_in"] = True
-            return redirect(url_for("home"))
-        return render_template("login.html", error="Invalid credentials")
+            return redirect("/")
+        return render_template("login.html", error="Invalid Credentials")
     return render_template("login.html")
 
 @app.route("/logout")
 def logout():
     session.pop("logged_in", None)
-    return redirect(url_for("login"))
+    return redirect("/")
 
-# ------------------ JSONBin Functions ------------------
+# --- Application Management ---
+@app.route("/create_app", methods=["POST"])
+def create_app():
+    app_name = request.form["name"]
+    data = load_data()
+    if app_name in data:
+        return jsonify({"status": "error", "message": "App already exists"})
+    data[app_name] = []
+    if save_data(data):
+        return jsonify({"status": "success", "message": "App created"})
+    return jsonify({"status": "error", "message": "Failed to save app"})
 
-def load_data():
-    try:
-        res = requests.get(f"https://api.jsonbin.io/v3/b/{BIN_ID}/latest", headers=HEADERS)
-        if res.status_code == 200:
-            return res.json().get("record", {})
-        return {}
-    except Exception as e:
-        print("Load error:", e)
-        return {}
+@app.route("/get_apps")
+def get_apps():
+    data = load_data()
+    apps = [key for key in data.keys() if key != "messages"]
+    return jsonify(apps)
 
-def save_data(data):
-    try:
-        res = requests.put(f"https://api.jsonbin.io/v3/b/{BIN_ID}", headers=HEADERS, json=data)
-        return res.status_code == 200
-    except Exception as e:
-        print("Save error:", e)
-        return False
-
-# ------------------ API Routes ------------------
-
+# --- User Operations ---
 @app.route("/add_user", methods=["POST"])
 def add_user():
     data = load_data()
-    app_name = request.form["category"]
+    category = request.form["category"]
     username = request.form["username"]
     password = request.form["password"]
     expiry = request.form["expiry"]
-
-    if app_name not in data:
-        data[app_name] = []
-
-    for u in data[app_name]:
+    if category not in data:
+        return jsonify({"status": "error", "message": "Invalid app"})
+    for u in data[category]:
         if u["Username"] == username:
-            return jsonify({"status": "error", "message": "Username already exists"})
-
-    data[app_name].append({
+            return jsonify({"status": "error", "message": "User exists"})
+    data[category].append({
         "Username": username,
         "Password": password,
         "HWID": None,
         "Status": "Active",
         "Expiry": expiry,
-        "CreatedAt": datetime.today().strftime("%Y-%m-%d"),
-        "Message": ""
+        "CreatedAt": datetime.today().strftime("%Y-%m-%d")
     })
-
     if save_data(data):
-        return jsonify({"status": "success", "message": "User added successfully"})
-    return jsonify({"status": "error", "message": "Failed to save data"})
+        return jsonify({"status": "success", "message": "User created"})
+    return jsonify({"status": "error", "message": "Failed to save"})
 
 @app.route("/delete_user", methods=["POST"])
 def delete_user():
     data = load_data()
-    app_name = request.form["category"]
+    category = request.form["category"]
     username = request.form["username"]
-
-    if app_name not in data:
+    if category not in data:
         return jsonify({"status": "error", "message": "Invalid app"})
-
-    original_len = len(data[app_name])
-    data[app_name] = [u for u in data[app_name] if u["Username"] != username]
-
-    if len(data[app_name]) == original_len:
-        return jsonify({"status": "error", "message": "User not found"})
-
+    data[category] = [u for u in data[category] if u["Username"] != username]
     if save_data(data):
         return jsonify({"status": "success", "message": "User deleted"})
-    return jsonify({"status": "error", "message": "Failed to update data"})
+    return jsonify({"status": "error", "message": "Failed to update"})
 
 @app.route("/pause_user", methods=["POST"])
 def pause_user():
     data = load_data()
-    app_name = request.form["category"]
+    category = request.form["category"]
     username = request.form["username"]
-    action = request.form["action"]
-
-    if app_name not in data:
-        return jsonify({"status": "error", "message": "Invalid app"})
-
-    for user in data[app_name]:
+    action = request.form["action"]  # "pause" or "unpause"
+    for user in data.get(category, []):
         if user["Username"] == username:
             user["Status"] = "Paused" if action == "pause" else "Active"
             if save_data(data):
@@ -134,13 +128,9 @@ def pause_user():
 @app.route("/reset_hwid", methods=["POST"])
 def reset_hwid():
     data = load_data()
-    app_name = request.form["category"]
+    category = request.form["category"]
     username = request.form["username"]
-
-    if app_name not in data:
-        return jsonify({"status": "error", "message": "Invalid app"})
-
-    for user in data[app_name]:
+    for user in data.get(category, []):
         if user["Username"] == username:
             user["HWID"] = None
             if save_data(data):
@@ -151,73 +141,41 @@ def reset_hwid():
 @app.route("/info_user", methods=["POST"])
 def info_user():
     data = load_data()
-    app_name = request.form["category"]
+    category = request.form["category"]
     username = request.form["username"]
-
-    if app_name not in data:
-        return jsonify({"status": "error", "message": "Invalid app"})
-
-    for user in data[app_name]:
+    for user in data.get(category, []):
         if user["Username"] == username:
             return jsonify({"status": "success", "data": user})
-
     return jsonify({"status": "error", "message": "User not found"})
 
 @app.route("/get_users", methods=["POST"])
 def get_users():
     data = load_data()
-    app_name = request.form["category"]
-    return jsonify(data.get(app_name, []))
+    category = request.form["category"]
+    return jsonify(data.get(category, []))
 
+# --- Message System ---
 @app.route("/send_message", methods=["POST"])
 def send_message():
     data = load_data()
-    app_name = request.form["category"]
+    category = request.form["category"]
     username = request.form["username"]
-    message = request.form["message"]
+    msg = request.form["message"]
+    if "messages" not in data:
+        data["messages"] = {}
+    data["messages"][f"{category}:{username}"] = msg
+    if save_data(data):
+        return jsonify({"status": "success", "message": "Message sent"})
+    return jsonify({"status": "error", "message": "Failed to save message"})
 
-    if app_name not in data:
-        return jsonify({"status": "error", "message": "Invalid app"})
-
-    for user in data[app_name]:
-        if user["Username"] == username:
-            user["Message"] = message
-            if save_data(data):
-                return jsonify({"status": "success", "message": "Message sent"})
-            return jsonify({"status": "error", "message": "Failed to send message"})
-
-    return jsonify({"status": "error", "message": "User not found"})
-
-@app.route("/client_login", methods=["POST"])
-def client_login():
+@app.route("/get_message", methods=["POST"])
+def get_message():
     data = load_data()
-    app_name = request.form["category"]
+    category = request.form["category"]
     username = request.form["username"]
-    password = request.form["password"]
-    hwid = request.form["hwid"]
-
-    if app_name not in data:
-        return jsonify({"status": "error", "message": "Invalid app"})
-
-    for user in data[app_name]:
-        if user["Username"] == username and user["Password"] == password:
-            if user["Status"] != "Active":
-                return jsonify({"status": "error", "message": "Account paused"})
-
-            if user["HWID"] in [None, ""]:
-                user["HWID"] = hwid
-                if save_data(data):
-                    return jsonify({"status": "success", "message": "HWID bound, login success", "msg": user.get("Message", "")})
-                return jsonify({"status": "error", "message": "Failed to bind HWID"})
-
-            if user["HWID"] != hwid:
-                return jsonify({"status": "error", "message": "HWID mismatch"})
-
-            return jsonify({"status": "success", "message": "Login success", "msg": user.get("Message", "")})
-
-    return jsonify({"status": "error", "message": "Invalid credentials"})
-
-# ------------------ Run Flask App ------------------
+    key = f"{category}:{username}"
+    message = data.get("messages", {}).get(key, "")
+    return jsonify({"message": message})
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(debug=True)
