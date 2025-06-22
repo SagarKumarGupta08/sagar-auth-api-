@@ -14,6 +14,7 @@
       --button-bg: #2f3542;
       --accent-color: #1e90ff;
     }
+
     body.light-mode {
       --bg-color: #f4f4f4;
       --top-panel: #ffffff;
@@ -23,106 +24,159 @@
       --button-bg: #cccccc;
       --accent-color: #007bff;
     }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
-      margin: 0;
+      height: 100vh;
       padding: 20px;
       font-family: 'Segoe UI', sans-serif;
       background-color: var(--bg-color);
       color: var(--text-color);
       transition: all 0.3s ease;
     }
-    .top-panel, .left-panel, .right-panel, .submit-btn, input, select, textarea {
-      font-family: inherit;
-    }
+
     .top-panel {
       height: 90px;
       background-color: var(--top-panel);
+      margin-bottom: 20px;
       border-radius: 12px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       padding: 0 25px;
-      margin-bottom: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
+
     .title {
-      font-size: 32px;
-      font-weight: bold;
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: 1px;
     }
+
     .top-controls {
       display: flex;
-      gap: 12px;
+      align-items: center;
+      gap: 15px;
     }
+
     select, .toggle-btn {
-      padding: 10px 14px;
-      background-color: var(--button-bg);
-      border: none;
+      padding: 12px 16px;
       border-radius: 6px;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      background-color: var(--button-bg);
       color: var(--text-color);
     }
+
     .middle-area {
       display: flex;
+      height: calc(100% - 110px);
       gap: 20px;
     }
+
     .left-panel {
       width: 220px;
       background-color: var(--sidebar);
       border-radius: 12px;
-      padding: 15px;
+      padding: 20px 10px;
     }
-    .sidebar-menu button {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      background: transparent;
-      color: var(--text-color);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 6px;
-      cursor: pointer;
-    }
+
     .right-panel {
-      flex-grow: 1;
+      flex: 1;
       background-color: var(--main-panel);
       border-radius: 12px;
       padding: 20px;
+      overflow-y: auto;
     }
-    .panel-content {
-      display: none;
+
+    .sidebar-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
-    .panel-content.active {
-      display: block;
+
+    .sidebar-menu button {
+      padding: 10px 14px;
+      background-color: transparent;
+      color: var(--text-color);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      text-align: left;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
     }
+
+    .sidebar-menu button:hover {
+      background-color: rgba(255,255,255,0.08);
+      transform: translateX(3px);
+    }
+
+    .panel-content { display: none; }
+    .panel-content.active { display: block; }
+
     .form-group {
-      margin-bottom: 15px;
+      margin-bottom: 20px;
+      max-width: 500px;
     }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
     input, textarea {
       width: 100%;
-      padding: 12px;
-      border-radius: 6px;
-      border: none;
-      background: #eee;
-      color: #000;
-    }
-    body:not(.light-mode) input, body:not(.light-mode) textarea {
-      background: #333;
-      color: white;
-    }
-    .submit-btn {
-      background-color: var(--accent-color);
-      color: white;
-      border: none;
-      padding: 12px 20px;
+      padding: 14px;
       border-radius: 8px;
-      cursor: pointer;
-      margin-top: 10px;
+      border: none;
+      font-size: 16px;
     }
+
+    body:not(.light-mode) input,
+    body:not(.light-mode) textarea {
+      background-color: #333;
+      color: #fff;
+    }
+
+    .submit-btn {
+      padding: 14px 24px;
+      border-radius: 8px;
+      background-color: var(--accent-color);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .submit-btn:hover {
+      background-color: #005fc1;
+      transform: scale(1.02);
+    }
+
     table {
       width: 100%;
       margin-top: 20px;
       border-collapse: collapse;
     }
+
     th, td {
       padding: 10px;
       border: 1px solid #444;
+    }
+
+    pre {
+      background-color: #111;
+      padding: 14px;
+      border-radius: 8px;
+      color: #ccc;
+      margin-top: 10px;
+      white-space: pre-wrap;
     }
   </style>
 </head>
@@ -130,9 +184,7 @@
   <div class="top-panel">
     <div class="title">HydraAuth System</div>
     <div class="top-controls">
-      <select id="appSelect">
-        <option>Select App</option>
-      </select>
+      <select id="appSelect"><option>Select App</option></select>
       <button class="toggle-btn" onclick="toggleMode()">🌙 Dark Mode</button>
     </div>
   </div>
@@ -152,47 +204,43 @@
     </div>
 
     <div class="right-panel">
-      <!-- Create App -->
+      <!-- Panels -->
       <div id="createApp" class="panel-content active">
         <h3>Create Application</h3>
         <div class="form-group">
+          <label>App Name</label>
           <input id="appName" placeholder="Enter App Name">
         </div>
         <button class="submit-btn" onclick="createApp()">Create App</button>
       </div>
 
-      <!-- Create User -->
       <div id="createUser" class="panel-content">
-        <h3>Create New User</h3>
-        <input id="username" placeholder="Username"><br>
-        <input id="password" placeholder="Password"><br>
-        <input type="date" id="expiry"><br>
+        <h3>Create User</h3>
+        <div class="form-group"><label>Username</label><input id="username"></div>
+        <div class="form-group"><label>Password</label><input id="password" type="password"></div>
+        <div class="form-group"><label>Expiry Date</label><input id="expiry" type="date"></div>
         <button class="submit-btn" onclick="createUser()">Create</button>
       </div>
 
-      <!-- Remove User -->
       <div id="removeUser" class="panel-content">
         <h3>Remove User</h3>
         <input id="removeUsername" placeholder="Username"><br>
         <button class="submit-btn" onclick="removeUser()">Remove</button>
       </div>
 
-      <!-- Pause/Unpause -->
       <div id="pauseUser" class="panel-content">
-        <h3>Pause/Unpause</h3>
+        <h3>Pause / Unpause</h3>
         <input id="pauseUsername" placeholder="Username"><br>
         <button class="submit-btn" onclick="pauseUser()">Pause</button>
         <button class="submit-btn" onclick="unpauseUser()">Unpause</button>
       </div>
 
-      <!-- Reset HWID -->
       <div id="resetHWID" class="panel-content">
         <h3>Reset HWID</h3>
         <input id="hwidUser" placeholder="Username"><br>
         <button class="submit-btn" onclick="resetHWID()">Reset</button>
       </div>
 
-      <!-- View All Users -->
       <div id="viewUsers" class="panel-content">
         <h3>All Users</h3>
         <table id="userTable">
@@ -201,15 +249,13 @@
         </table>
       </div>
 
-      <!-- User Info -->
       <div id="userInfo" class="panel-content">
         <h3>User Info</h3>
         <input id="infoUser" placeholder="Username"><br>
         <button class="submit-btn" onclick="infoUser()">Get Info</button>
-        <pre id="infoBox"></pre>
+        <pre id="infoBox">User info will appear here...</pre>
       </div>
 
-      <!-- Send Message -->
       <div id="sendMsg" class="panel-content">
         <h3>Send Message</h3>
         <input id="msgUser" placeholder="Username"><br>
@@ -232,7 +278,10 @@
     }
 
     function toggleMode() {
-      document.body.classList.toggle("light-mode");
+      const body = document.body;
+      const btn = document.querySelector('.toggle-btn');
+      body.classList.toggle("light-mode");
+      btn.textContent = body.classList.contains("light-mode") ? "🌞 Light Mode" : "🌙 Dark Mode";
     }
 
     function getApp() {
@@ -317,12 +366,12 @@
         if (res.status === "success") {
           const u = res.data;
           infoBox.textContent = `
-Username: ${u.Username}
-Password: ${u.Password}
-Status: ${u.Status}
-Expiry: ${u.Expiry}
-HWID: ${u.HWID}
-Created: ${u.CreatedAt}
+👤 Username: ${u.Username}
+🔐 Password: ${u.Password}
+🖥️ HWID: ${u.HWID}
+📛 Status: ${u.Status}
+📅 Expiry: ${u.Expiry}
+🕒 Created At: ${u.CreatedAt}
           `;
         } else {
           infoBox.textContent = res.message;
