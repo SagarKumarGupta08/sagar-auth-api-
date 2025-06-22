@@ -14,7 +14,6 @@
       --button-bg: #2f3542;
       --accent-color: #1e90ff;
     }
-
     body.light-mode {
       --bg-color: #f4f4f4;
       --top-panel: #ffffff;
@@ -24,153 +23,116 @@
       --button-bg: #cccccc;
       --accent-color: #007bff;
     }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
-      height: 100vh;
-      padding: 20px;
+      height: 100vh; padding: 20px;
       font-family: 'Segoe UI', sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
+      background-color: var(--bg-color); color: var(--text-color);
       transition: all 0.3s ease;
     }
-
     .top-panel {
-      height: 90px;
-      background-color: var(--top-panel);
-      margin-bottom: 20px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 25px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      height: 90px; background-color: var(--top-panel);
+      margin-bottom: 20px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 25px; box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
-
     .title {
-      font-size: 36px;
-      font-weight: 900;
-      letter-spacing: 1px;
-    }
+  font-size: 40px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: var(--text-color);
+  animation: shadowPulse 2s infinite ease-in-out;
+  transition: all 0.3s;
+}
 
-    .top-controls {
-      display: flex;
-      align-items: center;
-      gap: 15px;
+/* Keyframes for animated shadow glow */
+@keyframes shadowPulse {
+  0% {
+    text-shadow: 0 0 2px #1e90ff, 0 0 4px #1e90ff;
+  }
+  50% {
+    text-shadow: 0 0 10px #1e90ff, 0 0 20px #1e90ff;
+  }
+  100% {
+    text-shadow: 0 0 2px #1e90ff, 0 0 4px #1e90ff;
+  }
+}
     }
-
+    .top-controls { display: flex; align-items: center; gap: 15px; }
     select, .toggle-btn {
-      padding: 12px 16px;
-      border-radius: 6px;
-      border: none;
-      font-size: 14px;
-      cursor: pointer;
-      background-color: var(--button-bg);
-      color: var(--text-color);
+      padding: 12px 16px; border-radius: 6px; border: none;
+      font-size: 14px; cursor: pointer;
+      background-color: var(--button-bg); color: var(--text-color);
     }
-
-    .middle-area {
-      display: flex;
-      height: calc(100% - 110px);
-      gap: 20px;
-    }
-
+    .middle-area { display: flex; height: calc(100% - 110px); gap: 20px; }
     .left-panel {
-      width: 220px;
-      background-color: var(--sidebar);
-      border-radius: 12px;
-      padding: 20px 10px;
+      width: 220px; background-color: var(--sidebar);
+      border-radius: 12px; padding: 20px 10px;
     }
-
     .right-panel {
-      flex: 1;
-      background-color: var(--main-panel);
-      border-radius: 12px;
-      padding: 20px;
-      overflow-y: auto;
+      flex: 1; background-color: var(--main-panel);
+      border-radius: 12px; padding: 20px; overflow-y: auto;
     }
-
-    .sidebar-menu {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
+    .sidebar-menu { display: flex; flex-direction: column; gap: 12px; }
     .sidebar-menu button {
-      padding: 10px 14px;
-      background-color: transparent;
-      color: var(--text-color);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 6px;
-      text-align: left;
-      font-size: 15px;
-      cursor: pointer;
-      transition: all 0.2s;
+      padding: 10px 14px; background-color: transparent; color: var(--text-color);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
+      text-align: left; font-size: 15px; cursor: pointer; transition: all 0.2s;
     }
-
     .sidebar-menu button:hover {
-      background-color: rgba(255,255,255,0.08);
-      transform: translateX(3px);
+      background-color: rgba(255,255,255,0.08); transform: translateX(3px);
     }
-
     .panel-content { display: none; }
     .panel-content.active { display: block; }
-
     .form-group {
-      margin-bottom: 20px;
-      max-width: 500px;
+      margin-bottom: 25px; max-width: 500px;
     }
-
     label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
+      display: block; margin-bottom: 8px; font-weight: 600;
     }
-
-    input, textarea {
-      width: 100%;
-      padding: 14px;
-      border-radius: 8px;
-      border: none;
-      font-size: 16px;
+    input[type="text"], input[type="password"], input[type="date"], textarea {
+      width: 100%; padding: 14px;
+      border-radius: 8px; border: none; font-size: 16px;
+      background-color: #fff; color: #000; margin-bottom: 14px;
     }
-
-    body:not(.light-mode) input,
-    body:not(.light-mode) textarea {
-      background-color: #333;
-      color: #fff;
+    body:not(.light-mode) input, body:not(.light-mode) textarea {
+      background-color: #333; color: #fff;
     }
-
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
     .submit-btn {
-      padding: 14px 24px;
-      border-radius: 8px;
-      background-color: var(--accent-color);
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: 600;
-      transition: all 0.3s;
+      padding: 14px 24px; border-radius: 8px;
+      background-color: var(--accent-color); color: #fff;
+      border: none; cursor: pointer; font-size: 18px; font-weight: 600;
+      transition: all 0.3s; margin: 10px 10px 20px 0;
     }
-
     .submit-btn:hover {
-      background-color: #005fc1;
-      transform: scale(1.02);
+      background-color: #005fc1; transform: scale(1.02);
     }
-
+    .toast {
+      position: fixed; bottom: 30px; right: -400px;
+      background: #000; color: white; padding: 14px 24px;
+      border-radius: 10px; font-weight: bold;
+      opacity: 0; pointer-events: none;
+      transition: all 0.4s ease-in-out;
+    }
+    .toast.show {
+      right: 30px; opacity: 1; pointer-events: auto;
+    }
     table {
-      width: 100%;
-      margin-top: 20px;
-      border-collapse: collapse;
+      width: 100%; border-collapse: collapse; margin-top: 20px;
     }
-
     th, td {
-      padding: 10px;
-      border: 1px solid #444;
+      padding: 12px; border: 1px solid #444; text-align: left;
     }
-
-    pre {
+    th {
+      background-color: transparent;
+      color: var(--text-color);
+      border-bottom: 2px solid #555;
+    }
+    pre#userInfoOutput {
       background-color: #111;
       padding: 14px;
       border-radius: 8px;
@@ -192,202 +154,235 @@
   <div class="middle-area">
     <div class="left-panel">
       <div class="sidebar-menu">
-        <button onclick="trigger('createApp')">Create Application</button>
-        <button onclick="trigger('createUser')">Create User</button>
-        <button onclick="trigger('removeUser')">Remove User</button>
-        <button onclick="trigger('pauseUser')">Pause/Unpause</button>
-        <button onclick="trigger('resetHWID')">Reset HWID</button>
-        <button onclick="trigger('viewUsers')">View All</button>
-        <button onclick="trigger('userInfo')">User Info</button>
-        <button onclick="trigger('sendMsg')">Send Message</button>
+        <button onclick="triggerPanel('createApp')">Create Application</button>
+        <button onclick="triggerPanel('createUser')">Create New User</button>
+        <button onclick="triggerPanel('remove')">Remove User</button>
+        <button onclick="triggerPanel('suspend')">Suspend/Unpause User</button>
+        <button onclick="triggerPanel('reset')">Reset HWID</button>
+        <button onclick="triggerPanel('view')">View All Users</button>
+        <button onclick="triggerPanel('userinfo')">User Info</button>
+        <button onclick="triggerPanel('sendmsg')">Send Message</button>
       </div>
     </div>
 
     <div class="right-panel">
-      <!-- Panels -->
       <div id="createApp" class="panel-content active">
         <h3>Create Application</h3>
-        <div class="form-group">
-          <label>App Name</label>
-          <input id="appName" placeholder="Enter App Name">
+        <div class="form-group"><label>Application Name</label>
+          <input id="appName" type="text">
         </div>
-        <button class="submit-btn" onclick="createApp()">Create App</button>
+        <button class="submit-btn" onclick="createApp()">📁 Create Application</button>
       </div>
 
       <div id="createUser" class="panel-content">
-        <h3>Create User</h3>
-        <div class="form-group"><label>Username</label><input id="username"></div>
-        <div class="form-group"><label>Password</label><input id="password" type="password"></div>
-        <div class="form-group"><label>Expiry Date</label><input id="expiry" type="date"></div>
-        <button class="submit-btn" onclick="createUser()">Create</button>
+        <h3>Create New User</h3>
+        <div class="form-group"><label>Username</label>
+          <input id="username" type="text">
+        </div>
+        <div class="form-group"><label>Password</label>
+          <input id="password" type="password">
+        </div>
+        <div class="form-group"><label>Expiry Date</label>
+          <input id="expiry" type="date">
+        </div>
+        <button class="submit-btn" onclick="createUser()">➕ Create User</button>
       </div>
 
-      <div id="removeUser" class="panel-content">
+      <div id="remove" class="panel-content">
         <h3>Remove User</h3>
-        <input id="removeUsername" placeholder="Username"><br>
-        <button class="submit-btn" onclick="removeUser()">Remove</button>
+        <div class="form-group"><label>Username</label>
+          <input id="removeUsername" type="text">
+        </div>
+        <button class="submit-btn" onclick="removeUser()">🗑️ Remove</button>
       </div>
 
-      <div id="pauseUser" class="panel-content">
-        <h3>Pause / Unpause</h3>
-        <input id="pauseUsername" placeholder="Username"><br>
-        <button class="submit-btn" onclick="pauseUser()">Pause</button>
-        <button class="submit-btn" onclick="unpauseUser()">Unpause</button>
+      <div id="suspend" class="panel-content">
+        <h3>Suspend / Unpause User</h3>
+        <div class="form-group"><label>Username</label>
+          <input id="suspendUsername" type="text">
+        </div>
+        <button class="submit-btn" onclick="pauseUser()">⏸ Suspend</button>
+        <button class="submit-btn" onclick="unpauseUser()">▶ Unpause</button>
       </div>
 
-      <div id="resetHWID" class="panel-content">
+      <div id="reset" class="panel-content">
         <h3>Reset HWID</h3>
-        <input id="hwidUser" placeholder="Username"><br>
-        <button class="submit-btn" onclick="resetHWID()">Reset</button>
+        <div class="form-group"><label>Username</label>
+          <input id="resetUsername" type="text">
+        </div>
+        <button class="submit-btn" onclick="resetHWID()">♻ Reset</button>
       </div>
 
-      <div id="viewUsers" class="panel-content">
+      <div id="view" class="panel-content">
         <h3>All Users</h3>
-        <table id="userTable">
-          <thead><tr><th>Username</th><th>Status</th><th>Expiry</th></tr></thead>
-          <tbody></tbody>
-        </table>
+        <div style="overflow-x:auto;">
+          <table id="usersTable">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Password</th>
+                <th>HWID</th>
+                <th>Status</th>
+                <th>Expiry</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
 
-      <div id="userInfo" class="panel-content">
-        <h3>User Info</h3>
-        <input id="infoUser" placeholder="Username"><br>
-        <button class="submit-btn" onclick="infoUser()">Get Info</button>
-        <pre id="infoBox">User info will appear here...</pre>
+      <div id="userinfo" class="panel-content">
+        <h3>🔍 User Info</h3>
+        <div class="form-group">
+          <label>Enter Username</label>
+          <input type="text" id="searchUser" placeholder="Enter username">
+          <button class="submit-btn" onclick="showUserInfo()">🔍 Show Info</button>
+          <pre id="userInfoOutput">User info will appear here...</pre>
+        </div>
       </div>
 
-      <div id="sendMsg" class="panel-content">
-        <h3>Send Message</h3>
-        <input id="msgUser" placeholder="Username"><br>
-        <textarea id="msgText" rows="4" placeholder="Your message..."></textarea><br>
-        <button class="submit-btn" onclick="sendMsg()">Send</button>
+      <div id="sendmsg" class="panel-content">
+        <h3>📤 Send Message to User</h3>
+        <div class="form-group"><label>Username</label>
+          <input type="text" id="messageUser" placeholder="Enter existing username">
+        </div>
+        <div class="form-group"><label>Your Message</label>
+          <textarea id="messageText" rows="5" placeholder="Type your message here..."></textarea>
+        </div>
+        <button class="submit-btn" onclick="sendMessage()">📤 Send</button>
       </div>
     </div>
   </div>
 
-  <script>
-    const api = (path, data) => fetch(path, {
-      method: "POST",
-      body: new URLSearchParams(data)
-    }).then(r => r.json());
+  <div class="toast" id="toast">This is a notification</div>
 
-    function trigger(id) {
+  <script>
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3000);
+    }
+
+    function triggerPanel(id) {
       document.querySelectorAll('.panel-content').forEach(p => p.classList.remove('active'));
       document.getElementById(id).classList.add('active');
-      if (id === "viewUsers") loadUsers();
+      if (id === "view") loadUsersTable();
     }
 
     function toggleMode() {
       const body = document.body;
       const btn = document.querySelector('.toggle-btn');
-      body.classList.toggle("light-mode");
-      btn.textContent = body.classList.contains("light-mode") ? "🌞 Light Mode" : "🌙 Dark Mode";
-    }
-
-    function getApp() {
-      return document.getElementById("appSelect").value;
+      body.classList.toggle('light-mode');
+      btn.textContent = body.classList.contains('light-mode') ? '🌞 Light Mode' : '🌙 Dark Mode';
     }
 
     function createApp() {
-      const name = document.getElementById("appName").value;
-      if (!name) return alert("Enter app name");
-      api("/create_app", { name }).then(res => {
-        alert(res.message);
-        loadApps();
-      });
+      const name = document.getElementById('appName').value.trim();
+      if (!name) return showToast('❗ Enter application name');
+      const select = document.getElementById('appSelect');
+      const option = document.createElement('option');
+      option.text = name;
+      select.add(option);
+      showToast(`✅ Application "${name}" created`);
     }
 
-    function loadApps() {
-      fetch("/get_apps").then(r => r.json()).then(apps => {
-        const sel = document.getElementById("appSelect");
-        sel.innerHTML = `<option>Select App</option>`;
-        apps.forEach(a => {
-          const o = document.createElement("option");
-          o.text = a;
-          sel.add(o);
-        });
-      });
+    function getAppKey() {
+      const app = document.getElementById('appSelect').value;
+      if (!app || app === "Select App") {
+        showToast("❗ Select an app");
+        return null;
+      }
+      return `users_${app}`;
     }
 
     function createUser() {
-      api("/add_user", {
-        category: getApp(),
-        username: username.value,
-        password: password.value,
-        expiry: expiry.value
-      }).then(r => alert(r.message));
+      const key = getAppKey(); if (!key) return;
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const expiry = document.getElementById('expiry').value;
+      if (!username || !password || !expiry) return showToast("❗ Fill all fields");
+
+      const users = JSON.parse(localStorage.getItem(key) || "[]");
+      users.push({ username, password, hwid: 'N/A', status: 'Active', expiry, createdAt: new Date().toISOString().split("T")[0] });
+      localStorage.setItem(key, JSON.stringify(users));
+      showToast(`✅ User "${username}" created`);
     }
 
     function removeUser() {
-      api("/delete_user", {
-        category: getApp(),
-        username: removeUsername.value
-      }).then(r => alert(r.message));
+      const key = getAppKey(); if (!key) return;
+      const user = document.getElementById('removeUsername').value.trim();
+      const users = JSON.parse(localStorage.getItem(key) || "[]").filter(u => u.username !== user);
+      localStorage.setItem(key, JSON.stringify(users));
+      showToast(`🗑️ "${user}" removed`);
     }
 
     function pauseUser() {
-      api("/pause_user", {
-        category: getApp(),
-        username: pauseUsername.value,
-        action: "pause"
-      }).then(r => alert(r.message));
+      const key = getAppKey(); if (!key) return;
+      const user = document.getElementById('suspendUsername').value.trim();
+      const users = JSON.parse(localStorage.getItem(key) || "[]");
+      users.forEach(u => { if (u.username === user) u.status = 'Suspended'; });
+      localStorage.setItem(key, JSON.stringify(users));
+      showToast(`⏸ "${user}" suspended`);
     }
 
     function unpauseUser() {
-      api("/pause_user", {
-        category: getApp(),
-        username: pauseUsername.value,
-        action: "unpause"
-      }).then(r => alert(r.message));
+      const key = getAppKey(); if (!key) return;
+      const user = document.getElementById('suspendUsername').value.trim();
+      const users = JSON.parse(localStorage.getItem(key) || "[]");
+      users.forEach(u => { if (u.username === user) u.status = 'Active'; });
+      localStorage.setItem(key, JSON.stringify(users));
+      showToast(`▶ "${user}" unpaused`);
     }
 
     function resetHWID() {
-      api("/reset_hwid", {
-        category: getApp(),
-        username: hwidUser.value
-      }).then(r => alert(r.message));
+      const key = getAppKey(); if (!key) return;
+      const user = document.getElementById('resetUsername').value.trim();
+      const users = JSON.parse(localStorage.getItem(key) || "[]");
+      users.forEach(u => { if (u.username === user) u.hwid = 'N/A'; });
+      localStorage.setItem(key, JSON.stringify(users));
+      showToast(`♻ HWID reset for "${user}"`);
     }
 
-    function loadUsers() {
-      api("/get_users", { category: getApp() }).then(users => {
-        let rows = "";
-        users.forEach(u => {
-          rows += `<tr><td>${u.Username}</td><td>${u.Status}</td><td>${u.Expiry}</td></tr>`;
-        });
-        document.querySelector("#userTable tbody").innerHTML = rows;
+    function loadUsersTable() {
+      const key = getAppKey(); if (!key) return;
+      const users = JSON.parse(localStorage.getItem(key) || "[]");
+      const tbody = document.querySelector("#usersTable tbody");
+      tbody.innerHTML = "";
+      users.forEach(u => {
+        tbody.innerHTML += `<tr>
+          <td>${u.username}</td>
+          <td>${u.password}</td>
+          <td>${u.hwid}</td>
+          <td>${u.status}</td>
+          <td>${u.expiry}</td>
+          <td>${u.createdAt}</td>
+        </tr>`;
       });
     }
 
-    function infoUser() {
-      api("/info_user", {
-        category: getApp(),
-        username: infoUser.value
-      }).then(res => {
-        if (res.status === "success") {
-          const u = res.data;
-          infoBox.textContent = `
-👤 Username: ${u.Username}
-🔐 Password: ${u.Password}
-🖥️ HWID: ${u.HWID}
-📛 Status: ${u.Status}
-📅 Expiry: ${u.Expiry}
-🕒 Created At: ${u.CreatedAt}
-          `;
-        } else {
-          infoBox.textContent = res.message;
-        }
-      });
+    function showUserInfo() {
+      const key = getAppKey(); if (!key) return;
+      const userInput = document.getElementById('searchUser').value.trim();
+      const users = JSON.parse(localStorage.getItem(key) || "[]");
+      const found = users.find(u => u.username === userInput);
+      const box = document.getElementById('userInfoOutput');
+      if (!found) return box.textContent = `❗ User not found`;
+      box.textContent = `👤 Username: ${found.username}
+🔐 Password: ${found.password}
+🖥️ HWID: ${found.hwid}
+📛 Status: ${found.status}
+📅 Expiry: ${found.expiry}
+🕒 Created At: ${found.createdAt}`;
     }
 
-    function sendMsg() {
-      api("/send_message", {
-        category: getApp(),
-        username: msgUser.value,
-        message: msgText.value
-      }).then(r => alert(r.message));
+    function sendMessage() {
+      const msg = document.getElementById('messageText').value.trim();
+      if (!msg) return showToast("❗ Enter a message to send");
+      showToast(`📤 Message Sent: "${msg}"`);
+      document.getElementById('messageText').value = "";
     }
-
-    window.onload = loadApps;
   </script>
 </body>
 </html>
