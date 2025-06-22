@@ -18,7 +18,7 @@ HEADERS = {
     "X-Master-Key": JSONBIN_API_KEY
 }
 
-# --- JSONBin Helpers ---
+# --- Helpers ---
 def load_data():
     try:
         r = requests.get(f"https://api.jsonbin.io/v3/b/{BIN_ID}/latest", headers=HEADERS)
@@ -71,10 +71,9 @@ def create_app():
 @app.route("/get_apps")
 def get_apps():
     data = load_data()
-    apps = [key for key in data.keys() if key != "messages"]
-    return jsonify(apps)
+    return jsonify([key for key in data if key != "messages"])
 
-# --- User Operations ---
+# --- User Management ---
 @app.route("/add_user", methods=["POST"])
 def add_user():
     data = load_data()
@@ -93,7 +92,7 @@ def add_user():
         "HWID": None,
         "Status": "Active",
         "Expiry": expiry,
-        "CreatedAt": datetime.today().strftime("%Y-%m-%d")
+        "CreatedAt": datetime.now().strftime("%Y-%m-%d")
     })
     if save_data(data):
         return jsonify({"status": "success", "message": "User created"})
@@ -154,7 +153,7 @@ def get_users():
     category = request.form["category"]
     return jsonify(data.get(category, []))
 
-# --- Message System ---
+# --- Messaging ---
 @app.route("/send_message", methods=["POST"])
 def send_message():
     data = load_data()
@@ -177,6 +176,7 @@ def get_message():
     message = data.get("messages", {}).get(key, "")
     return jsonify({"message": message})
 
+# --- Run App ---
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
