@@ -2,7 +2,16 @@ from flask import Flask, request, jsonify, render_template, redirect, url_for, s
 import requests
 from datetime import datetime
 import os
+from flask import Flask, render_template
 
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+if __name__ == '__main__':
+    app.run()
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
