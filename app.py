@@ -15,25 +15,34 @@ BIN_ID = "6856f8e58a456b7966b2ca8d"
 
 HEADERS = {
     "Content-Type": "application/json",
-    "X-Master-Key": JSONBIN_API_KEY
+    "X-Master-Key": JSONBIN_API_KEY,
+    "X-Bin-Versioning": "false"
 }
 
-# --- Helpers ---
+# --- JSONBin Helpers ---
 def load_data():
     try:
         r = requests.get(f"https://api.jsonbin.io/v3/b/{BIN_ID}/latest", headers=HEADERS)
-        return r.json()['record'] if r.status_code == 200 else {}
+        if r.status_code == 200:
+            return r.json().get('record', {})
+        print("Load error:", r.status_code, r.text)
     except Exception as e:
         print("Error loading:", e)
-        return {}
+    return {}
 
 def save_data(data):
     try:
-        r = requests.put(f"https://api.jsonbin.io/v3/b/{BIN_ID}", headers=HEADERS, json=data)
-        return r.status_code == 200
+        r = requests.put(
+            f"https://api.jsonbin.io/v3/b/{BIN_ID}",
+            headers=HEADERS,
+            json={"record": data}  # Important for JSONBin v3
+        )
+        if r.status_code == 200:
+            return True
+        print("Save error:", r.status_code, r.text)
     except Exception as e:
         print("Error saving:", e)
-        return False
+    return False
 
 # --- Routes ---
 @app.route("/")
@@ -56,92 +65,96 @@ def logout():
     session.pop("logged_in", None)
     return redirect("/")
 
-# --- Application Management ---
+# --- App Management ---
 @app.route("/create_app", methods=["POST"])
 def create_app():
-    app_name = request.form["name"]
+    name = request.form["name"]
     data = load_data()
-    if app_name in data:
-        return jsonify({"status": "error", "message": "App already exists"})
-    data[app_name] = []
+    if name in data:
+        return jsonify({"message": "App already exists"})
+    data[name] = []
     if save_data(data):
-        return jsonify({"status": "success", "message": "App created"})
-    return jsonify({"status": "error", "message": "Failed to save app"})
+        return jsonify({"message": "App created"})
+    return jsonify({"message": "Error creating app"})
 
 @app.route("/get_apps")
 def get_apps():
     data = load_data()
     return jsonify([key for key in data if key != "messages"])
 
-# --- User Management ---
+# --- User Operations ---
 @app.route("/add_user", methods=["POST"])
 def add_user():
-    data = load_data()
     category = request.form["category"]
     username = request.form["username"]
     password = request.form["password"]
     expiry = request.form["expiry"]
+    data = load_data()
     if category not in data:
-        return jsonify({"status": "error", "message": "Invalid app"})
-    for u in data[category]:
-        if u["Username"] == username:
-            return jsonify({"status": "error", "message": "User exists"})
+        return jsonify({"message": "App not found"})
+
+    if any(u["Username"] == username for u in data[category]):
+        return jsonify({"message": "User already exists"})
+
     data[category].append({
         "Username": username,
         "Password": password,
         "HWID": None,
         "Status": "Active",
         "Expiry": expiry,
-        "CreatedAt": datetime.now().strftime("%Y-%m-%d")
+        "CreatedAt": datetime.today().strftime("%Y-%m-%d")
     })
+
     if save_data(data):
-        return jsonify({"status": "success", "message": "User created"})
-    return jsonify({"status": "error", "message": "Failed to save"})
+        return jsonify({"message": "User created"})
+    return jsonify({"message": "Error saving user"})
 
 @app.route("/delete_user", methods=["POST"])
 def delete_user():
-    data = load_data()
     category = request.form["category"]
     username = request.form["username"]
+    data = load_data()
     if category not in data:
-        return jsonify({"status": "error", "message": "Invalid app"})
+        return jsonify({"message": "App not found"})
+
     data[category] = [u for u in data[category] if u["Username"] != username]
+
     if save_data(data):
-        return jsonify({"status": "success", "message": "User deleted"})
-    return jsonify({"status": "error", "message": "Failed to update"})
+        return jsonify({"message": "User deleted"})
+    return jsonify({"message": "Error deleting user"})
 
 @app.route("/pause_user", methods=["POST"])
 def pause_user():
-    data = load_data()
     category = request.form["category"]
     username = request.form["username"]
-    action = request.form["action"]  # "pause" or "unpause"
+    action = request.form["action"]
+    data = load_data()
     for user in data.get(category, []):
         if user["Username"] == username:
             user["Status"] = "Paused" if action == "pause" else "Active"
             if save_data(data):
-                return jsonify({"status": "success", "message": f"User {action}d"})
-            return jsonify({"status": "error", "message": "Failed to save"})
-    return jsonify({"status": "error", "message": "User not found"})
+                return jsonify({"message": f"User {action}d"})
+            return jsonify({"message": "Error saving status"})
+    return jsonify({"message": "User not found"})
 
 @app.route("/reset_hwid", methods=["POST"])
 def reset_hwid():
-    data = load_data()
     category = request.form["category"]
     username = request.form["username"]
+    data = load_data()
     for user in data.get(category, []):
         if user["Username"] == username:
             user["HWID"] = None
             if save_data(data):
-                return jsonify({"status": "success", "message": "HWID reset"})
-            return jsonify({"status": "error", "message": "Save failed"})
-    return jsonify({"status": "error", "message": "User not found"})
+                return jsonify({"message": "HWID reset"})
+            return jsonify({"message": "Error saving HWID"})
+    return jsonify({"message": "User not found"})
 
 @app.route("/info_user", methods=["POST"])
 def info_user():
-    data = load_data()
     category = request.form["category"]
     username = request.form["username"]
+    data = load_data()
     for user in data.get(category, []):
         if user["Username"] == username:
             return jsonify({"status": "success", "data": user})
@@ -149,34 +162,34 @@ def info_user():
 
 @app.route("/get_users", methods=["POST"])
 def get_users():
-    data = load_data()
     category = request.form["category"]
+    data = load_data()
     return jsonify(data.get(category, []))
 
 # --- Messaging ---
 @app.route("/send_message", methods=["POST"])
 def send_message():
-    data = load_data()
     category = request.form["category"]
     username = request.form["username"]
-    msg = request.form["message"]
+    message = request.form["message"]
+    data = load_data()
+
     if "messages" not in data:
         data["messages"] = {}
-    data["messages"][f"{category}:{username}"] = msg
+
+    data["messages"][f"{category}:{username}"] = message
+
     if save_data(data):
-        return jsonify({"status": "success", "message": "Message sent"})
-    return jsonify({"status": "error", "message": "Failed to save message"})
+        return jsonify({"message": "Message sent"})
+    return jsonify({"message": "Error sending message"})
 
 @app.route("/get_message", methods=["POST"])
 def get_message():
-    data = load_data()
     category = request.form["category"]
     username = request.form["username"]
-    key = f"{category}:{username}"
-    message = data.get("messages", {}).get(key, "")
-    return jsonify({"message": message})
+    data = load_data()
+    msg = data.get("messages", {}).get(f"{category}:{username}", "")
+    return jsonify({"message": msg})
 
-# --- Run App ---
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5000)
