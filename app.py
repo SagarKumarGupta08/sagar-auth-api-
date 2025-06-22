@@ -11,7 +11,7 @@ ADMIN_USERNAME = "RTX"
 ADMIN_PASSWORD = "3050"
 
 JSONBIN_API_KEY = "$2a$10$vm/bHfwrLhw7wBCU4c/WeuiaKZy8mbLZt06WK3x6HpnEI9IPqyQFO"
-BIN_ID = "6856f8e58a456b7966b2ca8d"
+BIN_ID = "685791978a456b7966b31c51"
 
 HEADERS = {
     "Content-Type": "application/json",
